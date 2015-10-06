@@ -1,0 +1,52 @@
+MODULE main
+
+VAR
+raposa : boolean;
+ganso : boolean;
+feijoes : boolean;
+agricultor : boolean;
+
+
+IVAR
+op : { trans_ganso , trans_raposa , trans_feijoes , sozinho };
+
+ganso_morto : boolean;
+feijoes_comidos : boolean;
+
+ASSIGN 
+init ( ganso ) := FALSE;
+init ( raposa ) := FALSE;
+init ( feijoes ) := FALSE;
+init ( agricultor ) := FALSE;
+
+init ( ganso_morto ) := FALSE;
+init ( feijoes_comidos ) := FALSE;
+
+next ( agricultor ) := !agricultor;
+
+next ( ganso ) := case
+                  op = trans_ganso & agricultor : ganso;
+TRUE : ganso;
+esac;
+
+next ( raposa ) := case
+                   op = trans_raposa & agricultor : raposa;
+TRUE : raposa;
+esac;
+
+next ( feijoes ) := case
+                    op = trans_feijoes & agricultor : feijoes;
+TRUE : feijoes;
+esac;
+
+next ( ganso_morto ) := case
+                        raposa = ganso & ! agricultor : TRUE;
+TRUE : ganso_morto;
+esac;
+
+next ( feijoes_comidos ) := case
+                            ganso = feijoes & ! agricultor : TRUE;
+TRUE: feijoes_comidos;
+esac;
+
+LTLSPEC G ! ( ganso & raposa & feijoes & !ganso_morto & !feijoes_comidos );

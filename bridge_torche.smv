@@ -1,0 +1,56 @@
+MODULE pessoa ( tempo, tocha , pode_avancar )
+
+VAR
+posicao : { lado_esquerdo , atravessar, retornar, lado_direito };
+tempo_rest_trav : 0..100;
+
+DEFINE
+em_travessia:= (posicao = atravessar | posicao = retornar ) ? 1 : 0;
+
+INIT
+posicao = lado_esquerdo & tempo_rest_trav = 0;
+
+ASSIGN
+  next( posicao ):= case
+                    pode_avancar=TRUE & tocha=TRUE & posicao=lado_esquerdo : atravessar;
+                    pode_avancar=TRUE & tocha=FALSE & posicao= lado_direito : { retornar, lado_direito };
+                    pode_avancar=FALSE & ( posicao = atravessar | posicao = retornar ) : posicao;
+                    TRUE: posicao;
+                    esac;
+  next ( tempo_rest_trav ) := case
+                    ( posicao = atravessar ) & ( tempo_rest_trav = 1) : 0 ;
+                    TRUE : tempo_rest_trav;
+          esac;
+
+  MODULE main
+
+VAR
+  tocha : boolean;
+  pA : pessoa( 1, tocha , pode_avancar );
+  pB : pessoa( 2, tocha , pode_avancar );
+  pC : pessoa( 4, tocha , pode_avancar );
+  pD : pessoa( 8, tocha , pode_avancar );
+
+DEFINE
+pode_avancar:= (pA.posicao = lado_esquerdo | pA.posicao = lado_direito )
+  & ( pB.posicao = lado_esquerdo | pB.posicao = lado_direito ) 
+  & ( pC.posicao = lado_esquerdo | pC.posicao = lado_direito ) 
+  & ( pD.posicao = lado_esquerdo | pD.posicao = lado_direito );
+
+pessoas_atravessar:= (pA.em_travessia + pB.em_travessia + pC.em_travessia + pD.em_travessia );
+
+travessia_completa:= pA.posicao = lado_direito & pB.posicao = lado_direito & pC.posicao = lado_direito & pD.posicao = lado_direito;
+
+INIT
+  tocha = TRUE & pessoas_atravessar = 0;
+
+INVAR  
+( pessoas_atravessar <= 2 )
+
+  TRANS 
+  ( tocha = TRUE & pode_avancar ) -> ( next(tocha) = FALSE );
+  TRANS
+  ( tocha = FALSE & pode_avancar ) -> ( next(tocha) = TRUE );
+
+LTLSPEC
+G ( travessia_completa )

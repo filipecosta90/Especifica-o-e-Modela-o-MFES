@@ -1,0 +1,65 @@
+MODULE main
+
+VAR 
+turn : {0,1};
+thd0 : thread ( 0 , thd1.flag , turn );
+thd1 : thread ( 1, thd0.flag , turn );
+
+  TRANS
+!( thd0.EVENT = action & thd1.EVENT = action )
+  TRANS
+( thd0.EVENT = stutter -> thd1.EVENT = action )
+  TRANS 
+( thd1.EVENT = stutter -> thd1.EVENT = action )
+
+  LTLSPEC 
+G ! ( thd1.pc = 3 & thd0.pc = 3 )
+
+  LTLSPEC 
+F ( thd0.critical )
+
+  LTLSPEC 
+F ( thd1.critical )
+
+  FAIRNESS
+  thd0.EVENT = action
+
+  FAIRNESS
+  thd1.EVENT = action
+
+
+MODULE thread ( id , oflag, turn)
+
+  VAR 
+  pc : 0..5;
+flag : boolean;
+
+IVAR
+EVENT : { stutter, action };
+
+DEFINE 
+critical := pc = 3;
+
+INIT 
+flag = FALSE & pc = 0;
+
+  TRANS
+( EVENT = action ) -> ( pc = 0 -> next(flag) = TRUE & next(turn) = turn  & next(pc) = 1 )
+
+  TRANS
+( EVENT = action ) -> ( pc = 1 -> next(flag) = flag & next(turn) = (id+1) mod 2  & next(pc) = 2 )
+
+  TRANS
+( EVENT = action ) -> ( pc = 2 -> next(flag) = flag & next(turn) = turn  & next(pc) = ((oflag & turn = (id+1) mod 2 ) ? 2 : 3 ))
+
+  TRANS 
+( EVENT = action ) -> ( pc = 3 -> next(flag) = flag & next(turn) = turn  & next(pc) = 4  )
+
+  TRANS 
+( EVENT = action ) -> ( pc = 4 -> next(flag) = FALSE  & next(turn) = turn  & next(pc) = 5 )
+
+  TRANS
+( EVENT = action ) -> ( pc = 5 -> next(flag) = flag & next(turn) = turn  & next(pc) = 5 )
+
+  TRANS
+( EVENT = stutter ) -> (  next(flag) = flag & next(turn) = turn  & next(pc) = pc )

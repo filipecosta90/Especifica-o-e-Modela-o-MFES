@@ -1,0 +1,79 @@
+MODULE main
+
+VAR 
+turn : {0,1};
+thd0 : thread ( 0 , thd1.wants_to_enter , turn );
+thd1 : thread ( 1, thd0.wants_to_enter, turn );
+
+  TRANS
+!( thd0.EVENT = action & thd1.EVENT = action )
+
+  TRANS
+( thd0.EVENT = stutter -> thd1.EVENT = action )
+
+  TRANS 
+( thd1.EVENT = stutter -> thd0.EVENT = action )
+
+  LTLSPEC
+G ! ( thd1.pc = 6 & thd0.pc = 6 )
+
+  LTLSPEC
+F ( thd0.critical )
+
+  LTLSPEC
+F ( thd1.critical )
+
+  FAIRNESS
+  thd0.EVENT = action
+
+  FAIRNESS
+  thd1.EVENT = action
+
+MODULE thread ( id, owants , turn )
+
+  VAR
+  pc : 0..8;
+wants_to_enter : boolean;
+
+IVAR
+EVENT : { stutter , action };
+
+DEFINE
+critical := pc = 6;
+
+INIT
+wants_to_enter = FALSE & pc = 0;
+
+  TRANS
+( EVENT = action ) -> ( pc = 0 -> next(wants_to_enter) = TRUE & next(turn) = turn  & next(pc) = 1   )
+
+  TRANS
+( EVENT = action ) -> ( pc = 1 -> next(wants_to_enter) = wants_to_enter & next(turn) = turn  & next(pc) = ( owants ? 2 : 6 ))
+
+  TRANS
+( EVENT = action ) -> ( pc = 2 -> next(wants_to_enter ) = wants_to_enter & next(turn) = turn  & next(pc) = (( turn != id ? 3 : 1 )))
+
+  TRANS
+( EVENT = action ) -> ( pc = 3 -> next(wants_to_enter ) = FALSE & next(turn) = turn  & next(pc) = 4 )
+
+  TRANS
+( EVENT = action ) -> ( pc = 4 -> next(wants_to_enter ) = wants_to_enter & next(turn) = turn  & next(pc) = (( turn != id ? 4 : 5 )  ))
+
+  TRANS
+( EVENT = action ) -> ( pc = 5 -> next(wants_to_enter ) = TRUE & next(turn) = turn  & next(pc) = 1 )
+
+  TRANS
+( EVENT = action ) -> ( pc = 6 -> next(wants_to_enter ) = wants_to_enter & next(turn) = turn  & next(pc) = 7 )
+
+  TRANS
+( EVENT = action ) -> ( pc = 7 -> next(wants_to_enter ) = wants_to_enter & next(turn) = (id +1 ) mod 2  & next(pc) = 8 )
+
+  TRANS
+( EVENT = action ) -> ( pc = 8 -> next(wants_to_enter ) = FALSE & next(turn) = turn  & next(pc) = 9 )
+
+  TRANS
+( EVENT = action ) -> ( pc = 9 -> next(wants_to_enter ) = wants_to_enter & next(turn) = turn & next ( pc ) = 9 )
+
+  TRANS
+( EVENT = stutter ) -> (  next(wants_to_enter) = wants_to_enter & next(turn) = turn  & next(pc) = pc )
+
