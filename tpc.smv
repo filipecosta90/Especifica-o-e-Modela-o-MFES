@@ -7,84 +7,113 @@ pB: boolean;
 pC: boolean;
 pD: boolean;
 
-travessia :      {  Asoz , Bsoz , Csoz , Dsoz, AB, AC, AD, BC, BD, CD };
+tempo_total : 0..99;
+tempo_seguinte:  {0 , 1, 2 , 5, 8} ;
 
-tempo_total : 0..100;
-INIT
-tempo_total = 0 & tocha = FALSE 
-& pA = FALSE & pB = FALSE
-& pC = FALSE & pD = FALSE;
+
+travessia  :	{ Ning , Asoz , Bsoz , Csoz , Dsoz, AB, AC, AD, BC, BD, CD };
+
+DEFINE
+travessia_completa := pA=TRUE & pB=TRUE & pC=TRUE & pD=TRUE ;
 
 ASSIGN
-next ( travessia ) :=
-  case
-  tocha = pA : Asoz;
-TRUE : travessia;
-esac union
-case
-tocha = pB : Bsoz;
-TRUE : travessia;
-esac union
-case
-tocha = pC : Csoz;
-TRUE : travessia;
-esac union
-case
-tocha = pD : Dsoz;
-TRUE : travessia;
-esac union
-case
-tocha = pA & tocha = pB  : AB;
-TRUE : travessia;
-esac union
-case
-tocha = pA & tocha = pC  : AC;
-TRUE : travessia;
-esac union
-case
-tocha = pA & tocha = pD  : AD;
-TRUE : travessia;
-esac union   
-case
-tocha = pB & tocha = pC  : BC;
-TRUE : travessia;
-esac union
-case
-tocha = pB & tocha = pD  : BD;
-TRUE : travessia;
-esac union
-case
-tocha = pC & tocha = pD  : CD;
-TRUE : travessia;
+
+init(tocha):=FALSE;
+init(pA):=FALSE;
+init(pB):=FALSE;
+init(pC):=FALSE;
+init(pD):=FALSE;
+init(travessia):=Ning;
+init(tempo_total):=0;
+init(tempo_seguinte):=0;
+
+
+next ( travessia ) := 
+			-- Travessia sozinhos
+		       case
+  			tocha = pA : Asoz;
+			TRUE : travessia;
+		      esac union
+		
+		      case
+			tocha = pB : Bsoz;
+			TRUE : travessia;
+		      esac union
+	
+		      case
+			tocha = pC : Csoz;
+			TRUE : travessia;
+		      esac union
+		
+		      case
+			tocha = pD : Dsoz;
+			TRUE : travessia;
+		      esac union
+			-- Travessia acompanhados
+		      case
+			tocha = pA & tocha = pB  : AB;
+			TRUE : travessia;
+		      esac union
+		
+		      case
+			tocha = pA & tocha = pC  : AC;
+			TRUE : travessia;
+		      esac union
+
+		      case
+			tocha = pA & tocha = pD  : AD;
+			TRUE : travessia;
+		      esac union   
+
+		      case
+			tocha = pB & tocha = pC  : BC;
+			TRUE : travessia;
+		      esac union
+
+		      case
+			tocha = pB & tocha = pD  : BD;
+			TRUE : travessia;
+		      esac union
+
+		      case
+			tocha = pC & tocha = pD  : CD;
+			TRUE : travessia;
+		      esac;
+
+next(pA) := case
+  		tocha = pA & ( next(travessia)=Asoz|
+      		next(travessia)=AB | next(travessia)=AC |
+      		next(travessia)=AD) : next ( tocha );
+		TRUE: pA;
+	    esac;
+
+next(pB) := case
+  		tocha = pB & ( next(travessia)=Bsoz | next(travessia)=AB |
+      		next(travessia)=BC| next(travessia)=BD ) : next ( tocha );
+		TRUE: pB;
+	    esac;
+
+next(pC) := case
+  		tocha = pC & ( next(travessia)=Csoz|
+      		next(travessia)=AC | next(travessia)=BC | next(travessia)=CD ) : next ( tocha );
+		TRUE: pC;
+	    esac;
+
+next(pD) := case
+  		tocha = pD & ( next(travessia)=Dsoz | next(travessia)=AD | next(travessia)=BD | next(travessia)=CD) : next ( tocha );
+		TRUE: pD;
+	    esac; 
+
+next ( tempo_seguinte ) := case
+  next(travessia)=Asoz :  1 ;
+  next(travessia)=Bsoz | next(travessia)=AB :  2;
+  next(travessia)=Csoz | next(travessia)=AC | next(travessia)=BC :  5;
+  next(travessia)=Dsoz | next(travessia)=AD | next(travessia)=BD | next(travessia) = CD : 8;
+  TRUE : 0;
 esac;
 
-next(pA) := 
-  case
-  tocha = pA & ( next(travessia)=Asoz|
-      next(travessia)=AB| next(travessia)=AC|
-      next(travessia)=AD) : next ( tocha );
-TRUE: pA;
-esac;
+next ( tempo_total ) := ( tempo_total  + next(tempo_seguinte) ) mod 100;
 
-next(pB) := 
-  case
-  tocha = pB & ( next(travessia)=Bsoz |
-      next(travessia)=BC| next(travessia)=BD ) : next ( tocha );
-TRUE: pB;
-esac;
-next(pC) := 
-  case
-  tocha = pC & ( next(travessia)=Csoz|
-      next(travessia)=CD ) : next ( tocha );
-TRUE: pC;
-esac;
-next(pD) := 
-  case
-  tocha = pD & next(travessia)=Dsoz : next ( tocha );
-TRUE: pB;
-esac; 
-
-next ( tocha ) := !tocha;
-
-
-LTLSPEC !F (pA & pB & pC & pD )
+next( tocha ) := !tocha;
+			
+INVARSPEC (travessia_completa -> tempo_total > 15) 
