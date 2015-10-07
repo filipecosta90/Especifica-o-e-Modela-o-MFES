@@ -1,0 +1,87 @@
+MODULE main 
+
+VAR
+tocha: boolean;
+pA: boolean;
+pB: boolean;
+pC: boolean;
+pD: boolean;
+
+travessia :      {  Asoz , Bsoz , Csoz , Dsoz, AB, AC, AD, BC, BD, CD };
+
+tempo_total : 0..100;
+INIT
+tempo_total = 0 & tocha = FALSE 
+& pA = FALSE & pB = FALSE
+& pC = FALSE & pD = FALSE;
+
+ASSIGN
+next ( travessia ) :=
+  case
+  tocha = pA : Asoz;
+TRUE : travessia;
+esac union
+case
+tocha = pB : Bsoz;
+TRUE : travessia;
+esac union
+case
+tocha = pC : Csoz;
+TRUE : travessia;
+esac union
+case
+tocha = pD : Dsoz;
+TRUE : travessia;
+esac union
+case
+tocha = pA & tocha = pB  : AB;
+TRUE : travessia;
+esac union
+case
+tocha = pA & tocha = pC  : AC;
+TRUE : travessia;
+esac union
+case
+tocha = pA & tocha = pD  : AD;
+TRUE : travessia;
+esac union   
+case
+tocha = pB & tocha = pC  : BC;
+TRUE : travessia;
+esac union
+case
+tocha = pB & tocha = pD  : BD;
+TRUE : travessia;
+esac union
+case
+tocha = pC & tocha = pD  : CD;
+TRUE : travessia;
+esac ;
+
+next(pA) := 
+  case
+  tocha = pA & ( next(travessia)=Asoz|
+      next(travessia)=AB| next(travessia)=AC|
+      next(travessia)=AD) : next ( tocha );
+TRUE: pA;
+esac;
+
+next(pB) := 
+  case
+  tocha = pB & ( next(travessia)=Bsoz |
+      next(travessia)=BC| next(travessia)=BD ) : next ( tocha );
+TRUE: pB;
+esac;
+next(pC) := 
+  case
+  tocha = pC & ( next(travessia)=Csoz|
+      next(travessia)=CD ) : next ( tocha );
+TRUE: pC;
+esac;
+next(pD) := 
+  case
+  tocha = pD & next(travessia)=Dsoz : next ( tocha );
+TRUE: pB;
+esac; 
+
+LTLSPEC !F (pA & pB & pC & pD )
