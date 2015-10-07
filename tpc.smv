@@ -1,3 +1,9 @@
+-- 07 OUT 2015
+-- Especificacao-e-Modelacao-MFES
+-- a57779 Sergio Caldas
+-- a57816 Filipe Oliveira
+-- a59905 Carlos Sa
+
 MODULE main 
 
 VAR
@@ -9,7 +15,6 @@ pD: boolean;
 
 tempo_total : 0..99;
 tempo_seguinte:  {0 , 1, 2 , 5, 8} ;
-
 
 travessia  :	{ Ning , Asoz , Bsoz , Csoz , Dsoz, AB, AC, AD, BC, BD, CD };
 
@@ -26,7 +31,6 @@ init(pD):=FALSE;
 init(travessia):=Ning;
 init(tempo_total):=0;
 init(tempo_seguinte):=0;
-
 
 next ( travessia ) := 
 			-- Travessia sozinhos
